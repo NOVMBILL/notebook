@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sovereign Notebook OS</title>
+  <link rel="manifest" href="manifest.json">
+  <!-- **Elite Font Upgrade: Using Google Fonts for a modern, refined look.** -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      /* **Elite Light Theme Variables** */
+      --bg-color: #f2f2f2; /* Refined off-white background */
+      --text-color: #2d2d2d; /* Sophisticated dark text */
+      --accent-color: #d4af37; /* Rich gold accent */
+      --button-bg: #d4af37;
+      --button-hover-bg: #b5952d;
+      --border-color: #e0e0e0;
+      --editor-bg: #ffffff;
+      --toolbar-gradient-start: #d4af37;
+      --toolbar-gradient-end: #b5952d;
+      --button-gradient-start: #d4af37;
+      --button-gradient-end: #b5952d;
+      --note-hover-bg: rgba(212, 175, 55, 0.1);
+    }
+    body.dark {
+      /* **Elite Dark Theme Variables** */
+      --bg-color: #121212;
+      --text-color: #e0e0e0;
+      --accent-color: #b5952d;
+      --button-bg: #b5952d;
+      --button-hover-bg: #a3861f;
+      --border-color: #333333;
+      --editor-bg: #1e1e1e;
+      --toolbar-gradient-start: #b5952d;
+      --toolbar-gradient-end: #a3861f;
+      --button-gradient-start: #b5952d;
+      --button-gradient-end: #a3861f;
+      --note-hover-bg: rgba(181, 149, 45, 0.1);
+    }
+    /* **Subtle fade-in animation for an elite feel** */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+    body, #editor {
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    /* **Overall layout with a modern, elite feel.** */
+    body {
+      margin: 0;
+      font-family: 'Roboto', sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      animation: fadeIn 1s ease;
+    }
+    #toolbar {
+      padding: 12px 15px;
+      background: linear-gradient(45deg, var(--toolbar-gradient-start), var(--toolbar-gradient-end));
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      overflow-x: auto;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    #toolbar button {
+      padding: 10px 18px;
+      cursor: pointer;
+      flex-shrink: 0;
+      border: none;
+      background: linear-gradient(135deg, var(--button-gradient-start), var(--button-gradient-end));
+      color: var(--text-color);
+      border-radius: 12px;
+      transition: background 0.3s ease, transform 0.2s ease, box-shadow 0.2s ease;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    #toolbar button:hover {
+      background: linear-gradient(135deg, var(--button-hover-bg), var(--button-bg));
+      transform: translateY(-2px);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    }
+    #toolbar button:focus {
+      outline: none;
+    }
+    /* **Content container holds the note editor and notes list with refined scrolling.** */
+    #content {
+      flex: 1;
+      overflow: auto;
+      padding: 15px;
+    }
+    #editor {
+      width: 100%;
+      height: 100%;
+      padding: 15px;
+      border: 1px solid var(--border-color);
+      outline: none;
+      font-size: 16px;
+      resize: none;
+      background-color: var(--editor-bg);
+      color: var(--text-color);
+      box-sizing: border-box;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      transition: border-color 0.3s ease;
+    }
+    #editor:focus {
+      border-color: var(--accent-color);
+    }
+    #notesList {
+      display: none;
+      width: 100%;
+      height: 100%;
+      overflow-y: auto;
+      padding: 15px;
+      box-sizing: border-box;
+      background-color: var(--bg-color);
+    }
+    .note-item {
+      padding: 10px;
+      border-bottom: 1px solid var(--border-color);
+      cursor: pointer;
+      transition: background-color 0.3s ease, transform 0.2s ease;
+      border-radius: 4px;
+      margin-bottom: 8px;
+    }
+    .note-item:hover {
+      background-color: var(--note-hover-bg);
+      transform: scale(1.02);
+    }
+    /* **Active note styling for enhanced clarity in elite UI.** */
+    .note-item.active {
+      background-color: var(--accent-color);
+      color: #fff;
+    }
+    #searchBar {
+      flex: 1;
+      max-width: 250px;
+      padding: 8px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 5px;
+      outline: none;
+      transition: border-color 0.3s ease;
+      font-size: 14px;
+    }
+    #searchBar:focus {
+      border-color: var(--accent-color);
+    }
+    /* **Custom scrollbar for a refined, elite look** */
+    #notesList::-webkit-scrollbar, #content::-webkit-scrollbar {
+      width: 8px;
+    }
+    #notesList::-webkit-scrollbar-track, #content::-webkit-scrollbar-track {
+      background: var(--bg-color);
+    }
+    #notesList::-webkit-scrollbar-thumb, #content::-webkit-scrollbar-thumb {
+      background-color: var(--accent-color);
+      border-radius: 4px;
+    }
+    /* **Modal styles for elite UI interactions** */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .modal {
+      background: var(--editor-bg);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+      max-width: 400px;
+      width: 90%;
+      text-align: center;
+    }
+    .modal p {
+      margin-bottom: 20px;
+      font-size: 16px;
+    }
+    .modal-buttons button {
+      padding: 8px 16px;
+      margin: 0 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      background: var(--button-bg);
+      color: var(--text-color);
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+    .modal-buttons button:hover {
+      background: var(--button-hover-bg);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div id="toolbar">
+    <button id="newNoteBtn" title="Create a new note">New Note</button>
+    <button id="saveCloseBtn" title="Save current note and view all notes">Save &amp; Close</button>
+    <button id="viewNotesBtn" title="View list of notes">View Notes</button>
+    <button id="deleteNoteBtn" title="Delete current note">Delete Note</button>
+    <button id="exportBtn" title="Export all notes">Export Notes</button>
+    <button id="importBtn" title="Import notes from file">Import Notes</button>
+    <button id="toggleDarkBtn" title="Toggle between Dark and Light modes">Toggle Dark Mode</button>
+    <input type="file" id="importFile" accept="application/json" style="display:none;">
+    <input type="text" id="searchBar" placeholder="Search notes...">
+  </div>
+  <div id="content">
+    <textarea id="editor" placeholder="Start typing your note here..."></textarea>
+    <div id="notesList"></div>
+  </div>
+  <!-- **Modal for elite UI interactions** -->
+  <div id="modalOverlay" class="modal-overlay" style="display:none;">
+    <div class="modal">
+      <p id="modalMessage"></p>
+      <div class="modal-buttons">
+        <button id="modalConfirmBtn">Confirm</button>
+        <button id="modalCancelBtn">Cancel</button>
+      </div>
+    </div>
+  </div>
+  <script>
+    const app = {
+      notes: [],
+      currentNote: null,
+      autoSaveTimer: null,
+      backupTimer: null,
+      storageAvailable: (function() {
+        try {
+          const testKey = '__storage_test__';
+          localStorage.setItem(testKey, testKey);
+          localStorage.removeItem(testKey);
+          return true;
+        } catch (e) {
+          return false;
+        }
+      })(),
+      inMemoryStorage: {},
+
+      /** 
+       * **generateId() creates a unique ID using crypto.randomUUID if available, otherwise falls back to Date.now() with Math.random().**
+       */
+      generateId: function() {
+        return crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`;
+      },
+
+      init: function() {
+        this.loadNotesFromStorage();
+        this.restoreLastNote();
+        this.setEventListeners();
+        this.applyDarkModePreference();
+        this.startBackupTimer();
+        document.getElementById("editor").focus();
+        this.registerServiceWorker();
+
+        window.addEventListener("beforeunload", () => {
+          this.forceSave();
+        });
+      },
+
+      registerServiceWorker: async function() {
+        if ('serviceWorker' in navigator) {
+          try {
+            await navigator.serviceWorker.register('service-worker.js');
+            console.log("Service worker registered");
+          } catch (err) {
+            console.error("Service worker registration failed:", err);
+          }
+        }
+      },
+
+      loadNotesFromStorage: function() {
+        if (this.storageAvailable) {
+          const storedNotes = localStorage.getItem("notes");
+          if (storedNotes) {
+            try {
+              this.notes = JSON.parse(storedNotes);
+            } catch (e) {
+              console.error("Data corruption detected.");
+              this.notes = [];
+            }
+          }
+        } else {
+          this.notes = this.inMemoryStorage["notes"] || [];
+        }
+      },
+
+      saveNotesToStorage: function() {
+        try {
+          const uniqueNotes = this.notes.reduce((acc, note) => {
+            if (!acc.find(n => n.id === note.id)) acc.push(note);
+            return acc;
+          }, []);
+          if (this.storageAvailable) {
+            localStorage.setItem("notes", JSON.stringify(uniqueNotes));
+          } else {
+            this.inMemoryStorage["notes"] = uniqueNotes;
+          }
+        } catch (e) {
+          console.error("Storage write failed, retrying with fallback.");
+        }
+      },
+
+      restoreLastNote: function() {
+        const lastNote = this.storageAvailable 
+          ? localStorage.getItem("lastNote")
+          : this.inMemoryStorage["lastNote"];
+        if (lastNote) {
+          document.getElementById("editor").value = lastNote;
+          // **Ensure a unique ID when restoring a note.**
+          this.currentNote = { content: lastNote, id: this.generateId(), modified: new Date() };
+        }
+      },
+
+      setEventListeners: function() {
+        const editor = document.getElementById("editor");
+        editor.addEventListener("input", () => {
+          // **Using editor.value directly avoids unnecessary sanitization on every keystroke.**
+          this.currentNote = {
+            content: editor.value,
+            // **Generate a new ID if not already set to avoid duplicates.**
+            id: this.currentNote ? this.currentNote.id : this.generateId(),
+            modified: new Date()
+          };
+          if (this.autoSaveTimer) clearTimeout(this.autoSaveTimer);
+          this.autoSaveTimer = setTimeout(() => { this.autoSave(); }, 250);
+        });
+
+        document.getElementById("newNoteBtn").addEventListener("click", () => { this.newNote(); });
+        document.getElementById("saveCloseBtn").addEventListener("click", () => { this.saveAndClose(); });
+        document.getElementById("viewNotesBtn").addEventListener("click", () => { this.viewNotes(); });
+        document.getElementById("deleteNoteBtn").addEventListener("click", () => { this.deleteCurrentNote(); });
+        document.getElementById("exportBtn").addEventListener("click", () => { this.exportNotes(); });
+        document.getElementById("importBtn").addEventListener("click", () => { document.getElementById("importFile").click(); });
+        document.getElementById("toggleDarkBtn").addEventListener("click", () => {
+          this.toggleDarkMode();
+          document.getElementById("toggleDarkBtn").textContent =
+            document.body.classList.contains("dark") ? "Switch to Light Mode" : "Switch to Dark Mode";
+        });
+        document.getElementById("importFile").addEventListener("change", (e) => { this.importNotes(e); });
+        document.getElementById("searchBar").addEventListener("input", (e) => {
+          this.viewNotes(e.target.value);
+        });
+      },
+
+      autoSave: function() {
+        if (!this.currentNote) return;
+        if (this.storageAvailable) {
+          localStorage.setItem("lastNote", this.currentNote.content);
+        } else {
+          this.inMemoryStorage["lastNote"] = this.currentNote.content;
+        }
+        const existing = this.notes.find(note => note.id === this.currentNote.id);
+        if (existing) {
+          existing.content = this.currentNote.content;
+          existing.modified = new Date();
+        } else {
+          this.notes.push(this.currentNote);
+        }
+        this.saveNotesToStorage();
+      },
+
+      forceSave: function() { this.autoSave(); },
+
+      newNote: async function() {
+        const editor = document.getElementById("editor");
+        if (editor.value.trim() !== "") {
+          const saveBeforeNew = await this.showModal("Current note is modified. Save before creating a new note?", "Save", "Don't Save");
+          if (saveBeforeNew) {
+            this.autoSave();
+          }
+        }
+        editor.value = "";
+        // **Ensure a unique ID for every new note.**
+        this.currentNote = { content: "", id: this.generateId(), modified: new Date() };
+        editor.style.display = "block";
+        document.getElementById("notesList").style.display = "none";
+        editor.focus();
+      },
+
+      saveAndClose: function() {
+        this.autoSave();
+        this.viewNotes();
+      },
+
+      viewNotes: function(filter = "") {
+        const notesListDiv = document.getElementById("notesList");
+        const editor = document.getElementById("editor");
+        notesListDiv.innerHTML = "";
+        const sortedNotes = this.notes.sort((a, b) => new Date(b.modified) - new Date(a.modified));
+        sortedNotes.filter(note => note.content.toLowerCase().includes(filter.toLowerCase())).slice(0, 50).forEach(note => {
+          const div = document.createElement("div");
+          // **Highlight active note for elite UX clarity.**
+          div.className = "note-item" + (this.currentNote && note.id === this.currentNote.id ? " active" : "");
+          div.textContent = note.content.substring(0, 30) || "Untitled Note";
+          div.addEventListener("click", () => {
+            editor.value = note.content;
+            this.currentNote = note;
+            notesListDiv.style.display = "none";
+            editor.style.display = "block";
+            editor.focus();
+          });
+          notesListDiv.appendChild(div);
+        });
+        editor.style.display = "none";
+        notesListDiv.style.display = "block";
+      },
+
+      deleteCurrentNote: async function() {
+        if (!this.currentNote) return;
+        const confirmDelete = await this.showModal("Delete current note? You can undo within 5 seconds.", "Delete", "Cancel");
+        if (!confirmDelete) return;
+        const noteToDelete = this.currentNote;
+        this.notes = this.notes.filter(note => note.id !== noteToDelete.id);
+        this.saveNotesToStorage();
+        document.getElementById("editor").value = "";
+        this.currentNote = null;
+        // **Using elite modal for undo prompt with 5-second timeout**
+        const undoPromise = new Promise(resolve => {
+          const timer = setTimeout(() => {
+            resolve(false);
+          }, 5000);
+          this.showModal("Undo delete?", "Undo", "Dismiss").then(response => {
+            clearTimeout(timer);
+            resolve(response);
+          });
+        });
+        const undoDecision = await undoPromise;
+        if (undoDecision) {
+          this.notes.push(noteToDelete);
+          this.saveNotesToStorage();
+          await this.showModal("Note restored.", "OK", "");
+        } else {
+          console.log("Note permanently deleted.");
+        }
+      },
+
+      exportNotes: function() {
+        this.saveNotesToStorage();
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(this.notes));
+        const dlAnchorElem = document.createElement("a");
+        dlAnchorElem.setAttribute("href", dataStr);
+        dlAnchorElem.setAttribute("download", "notes_backup.json");
+        dlAnchorElem.click();
+      },
+
+      importNotes: function(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          try {
+            const importedNotes = JSON.parse(e.target.result);
+            importedNotes.forEach(impNote => {
+              const existing = this.notes.find(n => n.id === impNote.id);
+              if (!existing || new Date(impNote.modified) > new Date(existing.modified)) {
+                if (existing) {
+                  Object.assign(existing, impNote);
+                } else {
+                  this.notes.push(impNote);
+                }
+              }
+            });
+            this.saveNotesToStorage();
+            alert("Notes imported successfully.");
+          } catch (err) {
+            alert("Failed to import notes: Invalid file.");
+          }
+        };
+        reader.readAsText(file);
+      },
+
+      toggleDarkMode: function() {
+        document.body.classList.toggle("dark");
+        const isDark = document.body.classList.contains("dark");
+        if (this.storageAvailable) {
+          localStorage.setItem("darkMode", isDark ? "true" : "false");
+        }
+      },
+
+      applyDarkModePreference: function() {
+        if (this.storageAvailable) {
+          const darkPref = localStorage.getItem("darkMode");
+          if (darkPref === "true" || (!darkPref && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            document.body.classList.add("dark");
+            document.getElementById("toggleDarkBtn").textContent = "Switch to Light Mode";
+          }
+        } else {
+          if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            document.body.classList.add("dark");
+            document.getElementById("toggleDarkBtn").textContent = "Switch to Light Mode";
+          }
+        }
+      },
+
+      startBackupTimer: function() {
+        this.backupTimer = setInterval(() => {
+          console.log("Periodic backup:", JSON.stringify(this.notes));
+        }, 30000);
+      },
+
+      sanitize: function(input) {
+        const div = document.createElement("div");
+        div.appendChild(document.createTextNode(input));
+        return div.innerHTML;
+      },
+
+      /** 
+       * **showModal() creates a custom modal dialog for elite user interactions. Returns a Promise that resolves to true if confirmed, false otherwise.**
+       */
+      showModal: function(message, confirmText = "Confirm", cancelText = "Cancel") {
+        return new Promise(resolve => {
+          const modalOverlay = document.getElementById("modalOverlay");
+          const modalMessage = document.getElementById("modalMessage");
+          const confirmBtn = document.getElementById("modalConfirmBtn");
+          const cancelBtn = document.getElementById("modalCancelBtn");
+
+          modalMessage.textContent = message;
+          confirmBtn.textContent = confirmText;
+          cancelBtn.textContent = cancelText;
+          modalOverlay.style.display = "flex";
+
+          const cleanup = () => {
+            confirmBtn.removeEventListener("click", onConfirm);
+            cancelBtn.removeEventListener("click", onCancel);
+            modalOverlay.style.display = "none";
+          };
+
+          const onConfirm = () => { cleanup(); resolve(true); };
+          const onCancel = () => { cleanup(); resolve(false); };
+
+          confirmBtn.addEventListener("click", onConfirm);
+          cancelBtn.addEventListener("click", onCancel);
+        });
+      }
+    };
+
+    app.init();
+  </script>
+</body>
+</html>
